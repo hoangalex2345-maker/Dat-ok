@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 8: Một vài khái niệm cơ bản của Lý thuyết đồ thị - Toán 11 KNTT</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Be Vietnam Pro"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- KaTeX CDN with Async Load Guard -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0284c7;
+        }
+
+        /* Custom Laser Cursor Effect */
+        body.laser-active {
+            cursor: none !important;
+        }
+        body.laser-active * {
+            cursor: none !important;
+        }
+        #laser-pointer {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ff0055;
+            box-shadow: 0 0 12px #ff0055, 0 0 24px #ff0055, 0 0 36px #ff0055;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            display: none;
+            transition: transform 0.05s ease-out;
+        }
+
+        /* Animation & Slide transitions */
+        .slide-content {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+        }
+        .slide.active .slide-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* SVG Interactive Nodes */
+        .svg-node {
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .svg-node:hover {
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+        }
+        .svg-node circle {
+            transition: all 0.25s ease;
+        }
+        .svg-node:hover circle {
+            r: 18;
+            fill: #38bdf8;
+        }
+        .svg-edge {
+            transition: all 0.25s ease;
+        }
+        .svg-edge:hover {
+            stroke: #38bdf8;
+            stroke-width: 4;
+        }
+        
+        /* KaTeX Fallback styling safeguard */
+        .katex-display {
+            margin: 0.5em 0 !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 font-sans antialiased select-none overflow-hidden">
+
+    <!-- Laser Pointer Canvas Overlay -->
+    <div id="laser-pointer"></div>
+
+    <!-- Main App Container -->
+    <div class="flex flex-col h-full relative">
+
+        <!-- Top Navigation Header -->
+        <header class="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between z-30 shrink-0">
+            <div class="flex items-center space-x-3">
+                <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Toán 11 - KNTT
+                </span>
+                <h1 class="text-sm md:text-base font-bold text-slate-200 truncate max-w-[280px] sm:max-w-md md:max-w-xl">
+                    Bài 8: Một vài khái niệm cơ bản của Lý thuyết đồ thị
+                </h1>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Laser Pointer Toggle Button -->
+                <button id="btn-laser" title="Bật/Tắt con trỏ Laser (Phím L)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 transition-colors flex items-center space-x-1.5 text-xs font-medium border border-slate-700">
+                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                    <span class="hidden sm:inline">Laser</span>
+                </button>
+
+                <!-- Slide Overview Modal Toggle -->
+                <button id="btn-overview" title="Tổng quan slide (Phím O)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-400 transition-colors flex items-center space-x-1.5 text-xs font-medium border border-slate-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 14a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 14a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Tổng quan</span>
+                </button>
+
+                <!-- Fullscreen Button -->
+                <button id="btn-fullscreen" title="Toàn màn hình (Phím F)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 transition-colors border border-slate-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1 relative z-30">
+            <div id="progress-bar" class="bg-gradient-to-r from-sky-500 to-indigo-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+
+        <!-- Slides Viewport Container -->
+        <main id="slides-container" class="flex-1 relative overflow-hidden bg-slate-950">
+            
+            <!-- SLIDE 1: GIỚI THIỆU & MỤC TIÊU -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden active" data-slide="1">
+                <div class="slide-content max-w-5xl mx-auto space-y-8">
+                    <div class="text-center py-6 space-y-4">
+                        <span class="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-sm font-semibold tracking-wide uppercase inline-block">
+                            Chuyên đề 2 • Bài 8
+                        </span>
+                        <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-purple-400 leading-tight">
+                            MỘT VÀI KHÁI NIỆM CƠ BẢN CỦA LÝ THUYẾT ĐỒ THỊ
+                        </h1>
+                        <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                            Bộ sách Kết nối tri thức với cuộc sống - Chuyên đề Học tập Toán 11
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                            <div class="flex items-center space-x-3 text-sky-400 font-bold text-lg border-b border-slate-800 pb-3">
+                                <span class="p-2 rounded-lg bg-sky-500/10">📌</span>
+                                <h2>Nội dung chính của Bài học</h2>
+                            </div>
+                            <ul class="space-y-3 text-slate-300 text-sm md:text-base">
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-sky-400 font-bold">1.</span>
+                                    <span><strong>Phần 1: Khái niệm Đồ thị</strong> (Đơn đồ thị, Đa đồ thị, Giả đồ thị, Đồ thị có hướng)</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-indigo-400 font-bold">2.</span>
+                                    <span><strong>Phần 2: Bậc của đồ thị</strong> (Bậc đỉnh, Đỉnh cô lập, Đỉnh treo, Định lý bắt tay và hệ quả)</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-purple-400 font-bold">3.</span>
+                                    <span><strong>Ví dụ SGK & Bài tập áp dụng</strong> với lời giải chi tiết và SVG mô phỏng tương tác.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                            <div class="flex items-center space-x-3 text-emerald-400 font-bold text-lg border-b border-slate-800 pb-3">
+                                <span class="p-2 rounded-lg bg-emerald-500/10">🎯</span>
+                                <h2>Yêu cầu cần đạt</h2>
+                            </div>
+                            <ul class="space-y-3 text-slate-300 text-sm md:text-base">
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-emerald-400">✓</span>
+                                    <span>Nhận biết và phân biệt được các loại đồ thị thông dụng.</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-emerald-400">✓</span>
+                                    <span>Xác định tập đỉnh, tập cạnh, tính bậc của đỉnh.</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <span class="text-emerald-400">✓</span>
+                                    <span>Nắm vững Định lý bắt tay và vận dụng giải toán thực tế.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 2: PHẦN 1 - 1. KHÁI NIỆM ĐỒ THỊ -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="2">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">1. Định nghĩa Đồ thị (Graph)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="bg-sky-950/40 border border-sky-500/30 p-5 rounded-xl space-y-3">
+                                <h3 class="text-lg font-bold text-sky-400">Định nghĩa tổng quát</h3>
+                                <p class="text-slate-200 text-base leading-relaxed">
+                                    Một <strong>đồ thị</strong> $G = (V, E)$ bao gồm:
+                                </p>
+                                <ul class="list-disc list-inside text-slate-300 space-y-1 pl-2">
+                                    <li>Tập hợp đỉnh $V(G) \neq \emptyset$: đại diện cho các đối tượng.</li>
+                                    <li>Tập hợp cạnh $E(G)$: đại diện cho mối liên hệ giữa các đỉnh.</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-2">
+                                <h4 class="font-semibold text-amber-400 text-sm">💡 Ý nghĩa mô hình hóa thực tế:</h4>
+                                <p class="text-slate-300 text-sm leading-relaxed">
+                                    • Mạng xã hội: Đỉnh là tài khoản cá nhân, cạnh là quan hệ bạn bè.<br>
+                                    • Giao thông: Đỉnh là các thành phố, cạnh là các tuyến đường/chuyến bay nối giữa chúng.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Interactive SVG Graph Representation -->
+                        <div class="lg:col-span-5 bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Minh họa đồ thị $G = (V, E)$</h4>
+                            <svg class="w-full h-56 mx-auto" viewBox="0 0 300 200">
+                                <!-- Edges -->
+                                <line x1="60" y1="60" x2="160" y2="40" stroke="#475569" stroke-width="2" class="svg-edge" />
+                                <line x1="60" y1="60" x2="100" y2="150" stroke="#475569" stroke-width="2" class="svg-edge" />
+                                <line x1="160" y1="40" x2="240" y2="80" stroke="#475569" stroke-width="2" class="svg-edge" />
+                                <line x1="160" y1="40" x2="100" y2="150" stroke="#475569" stroke-width="2" class="svg-edge" />
+                                <line x1="240" y1="80" x2="100" y2="150" stroke="#475569" stroke-width="2" class="svg-edge" />
+
+                                <!-- Vertices -->
+                                <g class="svg-node" data-node="A">
+                                    <circle cx="60" cy="60" r="14" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+                                    <text x="60" y="65" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">A</text>
+                                </g>
+                                <g class="svg-node" data-node="B">
+                                    <circle cx="160" cy="40" r="14" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+                                    <text x="160" y="45" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">B</text>
+                                </g>
+                                <g class="svg-node" data-node="C">
+                                    <circle cx="240" cy="80" r="14" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+                                    <text x="240" y="85" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">C</text>
+                                </g>
+                                <g class="svg-node" data-node="D">
+                                    <circle cx="100" cy="150" r="14" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+                                    <text x="100" y="155" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">D</text>
+                                </g>
+                            </svg>
+                            <div class="text-xs text-sky-400 font-mono">
+                                $V = \{A, B, C, D\}$<br>
+                                $E = \{AB, AD, BC, BD, CD\}$
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 3: PHẦN 1 - 2. ĐƠN ĐỒ THỊ -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="3">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">2. Đơn Đồ Thị (Simple Graph)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-indigo-950/40 border border-indigo-500/30 p-5 rounded-xl space-y-3">
+                                <h3 class="text-lg font-bold text-indigo-400">Đặc điểm nhận biết</h3>
+                                <p class="text-slate-200 text-base leading-relaxed">
+                                    <strong>Đơn đồ thị</strong> là đồ thị vô hướng thỏa mãn hai điều kiện nghiêm ngặt:
+                                </p>
+                                <ul class="space-y-2 text-slate-300 text-sm">
+                                    <li class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                                        <span><strong>Không có khuyên (loop):</strong> Không có cạnh nào nối một đỉnh với chính nó.</span>
+                                    </li>
+                                    <li class="flex items-start space-x-2">
+                                        <span class="w-2 h-2 rounded-full bg-red-400 mt-1.5"></span>
+                                        <span><strong>Không có cạnh bội:</strong> Giữa 2 đỉnh bất kỳ chỉ có tối đa 1 cạnh nối.</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                                <p class="text-slate-300 text-sm">
+                                    📍 Mỗi cạnh trong đơn đồ thị tương ứng duy nhất với một cặp đỉnh không phân biệt thứ tự $\{u, v\}$.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SVG Diagram Simple Graph -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Ví dụ Đơn Đồ Thị</h4>
+                            <svg class="w-full h-56 mx-auto" viewBox="0 0 300 200">
+                                <line x1="70" y1="50" x2="230" y2="50" stroke="#64748b" stroke-width="2"/>
+                                <line x1="230" y1="50" x2="230" y2="150" stroke="#64748b" stroke-width="2"/>
+                                <line x1="230" y1="150" x2="70" y2="150" stroke="#64748b" stroke-width="2"/>
+                                <line x1="70" y1="150" x2="70" y2="50" stroke="#64748b" stroke-width="2"/>
+                                <line x1="70" y1="50" x2="230" y2="150" stroke="#64748b" stroke-width="2"/>
+
+                                <g class="svg-node" data-node="1"><circle cx="70" cy="50" r="14" fill="#4f46e5"/><text x="70" y="54" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">1</text></g>
+                                <g class="svg-node" data-node="2"><circle cx="230" cy="50" r="14" fill="#4f46e5"/><text x="230" y="54" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">2</text></g>
+                                <g class="svg-node" data-node="3"><circle cx="230" cy="150" r="14" fill="#4f46e5"/><text x="230" y="154" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">3</text></g>
+                                <g class="svg-node" data-node="4"><circle cx="70" cy="150" r="14" fill="#4f46e5"/><text x="70" y="154" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">4</text></g>
+                            </svg>
+                            <span class="inline-block px-3 py-1 rounded bg-emerald-500/10 text-emerald-400 text-xs font-semibold">
+                                ✓ Đơn đồ thị chuẩn
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 4: PHẦN 1 - 3. ĐA ĐỒ THỊ -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="4">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">3. Đa Đồ Thị (Multigraph)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-amber-950/40 border border-amber-500/30 p-5 rounded-xl space-y-3">
+                                <h3 class="text-lg font-bold text-amber-400">Khái niệm Cạnh bội</h3>
+                                <p class="text-slate-200 text-base leading-relaxed">
+                                    <strong>Đa đồ thị</strong> là đồ thị vô hướng có chứa <strong>cạnh bội</strong> (nhiều cạnh cùng nối hai đỉnh), nhưng không có khuyên.
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-2">
+                                <h4 class="text-sm font-bold text-slate-200">✈️ Ví dụ thực tế:</h4>
+                                <p class="text-slate-300 text-sm leading-relaxed">
+                                    Đường bay giữa Hà Nội (HAN) và TP.HCM (SGN) có nhiều hãng khai thác (Vietnam Airlines, Vietjet, Bamboo). Mỗi chuyến bay là một cạnh song song nối cùng 2 đỉnh!
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SVG Diagram Multigraph -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Minh họa Đa Đồ Thị (Có cạnh bội)</h4>
+                            <svg class="w-full h-56 mx-auto" viewBox="0 0 300 200">
+                                <!-- Parallel Edges between A and B -->
+                                <path d="M 70 100 Q 150 40 230 100" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                                <path d="M 70 100 Q 150 160 230 100" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                                <line x1="70" y1="100" x2="230" y2="100" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4"/>
+
+                                <g class="svg-node" data-node="A"><circle cx="70" cy="100" r="15" fill="#d97706"/><text x="70" y="105" text-anchor="middle" fill="#fff" font-weight="bold">A</text></g>
+                                <g class="svg-node" data-node="B"><circle cx="230" cy="100" r="15" fill="#d97706"/><text x="230" y="105" text-anchor="middle" fill="#fff" font-weight="bold">B</text></g>
+                            </svg>
+                            <span class="inline-block px-3 py-1 rounded bg-amber-500/10 text-amber-400 text-xs font-semibold">
+                                3 cạnh nối giữa A và B (Cạnh bội)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 5: PHẦN 1 - 4. GIẢ ĐỒ THỊ -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="5">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">4. Giả Đồ Thị (Pseudograph)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-rose-950/40 border border-rose-500/30 p-5 rounded-xl space-y-3">
+                                <h3 class="text-lg font-bold text-rose-400">Khái niệm Khuyên (Loop) & Giả đồ thị</h3>
+                                <p class="text-slate-200 text-base leading-relaxed">
+                                    <strong>Giả đồ thị</strong> là đồ thị vô hướng cho phép tồn tại cả <strong>cạnh bội</strong> lẫn <strong>vòng (khuyên)</strong>.
+                                </p>
+                                <p class="text-slate-300 text-sm">
+                                    • <em>Vòng (Khuyên):</em> Cạnh nối một đỉnh với chính nó (ký hiệu $(u, u)$).
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                                <h4 class="text-sm font-bold text-slate-200 mb-1">🎮 Ý nghĩa thực tế:</h4>
+                                <p class="text-slate-300 text-sm">
+                                    Trong trò chơi truyền tin, một người tự chuyển thông tin lại cho bản thân họ đại diện cho 1 khuyên tại đỉnh đó.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SVG Pseudograph with Loop -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Minh họa Giả Đồ Thị (Có Khuyên)</h4>
+                            <svg class="w-full h-56 mx-auto" viewBox="0 0 300 200">
+                                <!-- Edge between X and Y -->
+                                <line x1="90" y1="100" x2="210" y2="100" stroke="#f43f5e" stroke-width="2"/>
+
+                                <!-- Loop at X -->
+                                <path d="M 90 100 C 40 40, 140 40, 90 100" fill="none" stroke="#f43f5e" stroke-width="2"/>
+
+                                <g class="svg-node" data-node="X"><circle cx="90" cy="100" r="15" fill="#e11d48"/><text x="90" y="105" text-anchor="middle" fill="#fff" font-weight="bold">X</text></g>
+                                <g class="svg-node" data-node="Y"><circle cx="210" cy="100" r="15" fill="#e11d48"/><text x="210" y="105" text-anchor="middle" fill="#fff" font-weight="bold">Y</text></g>
+                            </svg>
+                            <span class="inline-block px-3 py-1 rounded bg-rose-500/10 text-rose-400 text-xs font-semibold">
+                                Có khuyên tại đỉnh X
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 6: PHẦN 1 - 5. ĐỒ THỊ CÓ HƯỚNG -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="6">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">5. Đồ Thị Có Hướng (Directed Graph / Digraph)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-cyan-950/40 border border-cyan-500/30 p-5 rounded-xl space-y-3">
+                                <h3 class="text-lg font-bold text-cyan-400">Khái niệm Cung (Directed Edge)</h3>
+                                <p class="text-slate-200 text-base leading-relaxed">
+                                    Đồ thị có hướng bao gồm tập các đỉnh $V$ và tập các <strong>cung</strong> $E$.
+                                </p>
+                                <p class="text-slate-300 text-sm">
+                                    • Mỗi cung là một cặp đỉnh có thứ tự $(u, v)$: đi từ <strong>đỉnh đầu $u$</strong> đến <strong>đỉnh cuối $v$</strong>.
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-2">
+                                <h4 class="text-sm font-bold text-slate-200">📱 Mạng xã hội Instagram / Twitter:</h4>
+                                <p class="text-slate-300 text-sm">
+                                    Tài khoản A bấm <em>Follow</em> tài khoản B $\rightarrow$ Tạo thành cung có hướng từ $A \to B$.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SVG Directed Graph -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Minh họa Đồ thị có hướng</h4>
+                            <svg class="w-full h-56 mx-auto" viewBox="0 0 300 200">
+                                <defs>
+                                    <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4" />
+                                    </marker>
+                                </defs>
+                                
+                                <line x1="70" y1="60" x2="230" y2="60" stroke="#06b6d4" stroke-width="2" marker-end="url(#arrow)"/>
+                                <line x1="230" y1="60" x2="150" y2="150" stroke="#06b6d4" stroke-width="2" marker-end="url(#arrow)"/>
+                                <line x1="150" y1="150" x2="70" y2="60" stroke="#06b6d4" stroke-width="2" marker-end="url(#arrow)"/>
+
+                                <g class="svg-node" data-node="U"><circle cx="70" cy="60" r="14" fill="#0891b2"/><text x="70" y="64" text-anchor="middle" fill="#fff" font-weight="bold">U</text></g>
+                                <g class="svg-node" data-node="V"><circle cx="230" cy="60" r="14" fill="#0891b2"/><text x="230" y="64" text-anchor="middle" fill="#fff" font-weight="bold">V</text></g>
+                                <g class="svg-node" data-node="W"><circle cx="150" cy="150" r="14" fill="#0891b2"/><text x="150" y="154" text-anchor="middle" fill="#fff" font-weight="bold">W</text></g>
+                            </svg>
+                            <span class="inline-block px-3 py-1 rounded bg-cyan-500/10 text-cyan-400 text-xs font-semibold">
+                                Mũi tên chỉ rõ hướng di chuyển $(U \to V \to W \to U)$
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 7: PHẦN 1 - CHÚ Ý & VÍ DỤ SGK 1, 2 -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="7">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-sky-400 text-sm font-semibold uppercase tracking-wider">Phần 1: Các Khái Niệm Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">6. Tổng kết & Ví dụ SGK (Phần 1)</h2>
+                    </div>
+
+                    <!-- Comparison Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
+                        <table class="w-full text-left text-xs md:text-sm text-slate-300">
+                            <thead class="bg-slate-800/80 text-sky-400 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Loại Đồ Thị</th>
+                                    <th class="p-3">Hướng Cạnh</th>
+                                    <th class="p-3">Cạnh Bội</th>
+                                    <th class="p-3">Khuyên (Loop)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr>
+                                    <td class="p-3 font-semibold text-slate-100">Đơn đồ thị</td>
+                                    <td class="p-3 text-slate-400">Không hướng</td>
+                                    <td class="p-3 text-red-400">❌ Không</td>
+                                    <td class="p-3 text-red-400">❌ Không</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold text-slate-100">Đa đồ thị</td>
+                                    <td class="p-3 text-slate-400">Không hướng</td>
+                                    <td class="p-3 text-emerald-400">Có</td>
+                                    <td class="p-3 text-red-400">❌ Không</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold text-slate-100">Giả đồ thị</td>
+                                    <td class="p-3 text-slate-400">Không hướng</td>
+                                    <td class="p-3 text-emerald-400">Có</td>
+                                    <td class="p-3 text-emerald-400">Có</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold text-slate-100">Đồ thị có hướng</td>
+                                    <td class="p-3 text-cyan-400">Có hướng</td>
+                                    <td class="p-3 text-slate-400">Tùy loại</td>
+                                    <td class="p-3 text-slate-400">Tùy loại</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ví dụ SGK Card -->
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sky-400">📘 Ví dụ 1 (SGK Trang 42)</h3>
+                            <button class="toggle-btn px-3 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-semibold transition" data-target="sol-1">
+                                Xem lời giải
+                            </button>
+                        </div>
+                        <p class="text-slate-300 text-sm">
+                            Cho đồ thị $G$ với $V = \{A, B, C, D\}$ và $E = \{AB, BC, CD, DA, AC\}$. Đồ thị $G$ thuộc loại đồ thị nào?
+                        </p>
+                        <div id="sol-1" class="hidden p-4 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-300 space-y-2">
+                            <span class="text-emerald-400 font-bold">Lời giải:</span>
+                            <p>
+                                • Đồ thị $G$ không chứa cạnh bội nào (mỗi cặp đỉnh nối tối đa 1 cạnh).<br>
+                                • Đồ thị $G$ không có khuyên (loop).<br>
+                                $\implies$ $G$ là <strong>Đơn đồ thị</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 8: PHẦN 2 - 1. BẬC CỦA ĐỈNH -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="8">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-indigo-400 text-sm font-semibold uppercase tracking-wider">Phần 2: Bậc Của Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">1. Bậc Của Đỉnh (Degree of Vertex)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+                                <h3 class="text-lg font-bold text-indigo-400">Đồ thị vô hướng</h3>
+                                <p class="text-slate-200 text-sm leading-relaxed">
+                                    Bậc của đỉnh $v$, ký hiệu là $\deg(v)$ hoặc $d(v)$, là <strong>số cạnh liên thuộc với $v$</strong>.
+                                </p>
+                                <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300">
+                                    ⚠️ <strong>Chú ý đặc biệt:</strong> Mỗi khuyên tại đỉnh $v$ được tính <strong>2 lần</strong> vào bậc $\deg(v)$.
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+                                <h3 class="text-lg font-bold text-cyan-400">Đồ thị có hướng</h3>
+                                <p class="text-slate-200 text-sm">
+                                    • <strong>Bậc vào $\deg^-(v)$:</strong> số cung đi vào $v$.<br>
+                                    • <strong>Bậc ra $\deg^+(v)$:</strong> số cung đi ra từ $v$.<br>
+                                    • Bậc tổng: $\deg(v) = \deg^-(v) + \deg^+(v)$.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Graph Degree Calculator -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Nhấp đỉnh để kiểm tra Bậc $\deg(v)$</h4>
+                            <svg class="w-full h-52 mx-auto" viewBox="0 0 300 180">
+                                <line x1="50" y1="90" x2="150" y2="40" stroke="#64748b" stroke-width="2"/>
+                                <line x1="150" y1="40" x2="250" y2="90" stroke="#64748b" stroke-width="2"/>
+                                <line x1="150" y1="40" x2="150" y2="150" stroke="#64748b" stroke-width="2"/>
+                                <line x1="50" y1="90" x2="150" y2="150" stroke="#64748b" stroke-width="2"/>
+
+                                <g class="svg-node" data-node="A" data-deg="2"><circle cx="50" cy="90" r="15" fill="#6366f1"/><text x="50" y="95" text-anchor="middle" fill="#fff" font-weight="bold">A</text></g>
+                                <g class="svg-node" data-node="B" data-deg="3"><circle cx="150" cy="40" r="15" fill="#6366f1"/><text x="150" y="45" text-anchor="middle" fill="#fff" font-weight="bold">B</text></g>
+                                <g class="svg-node" data-node="C" data-deg="1"><circle cx="250" cy="90" r="15" fill="#6366f1"/><text x="250" y="95" text-anchor="middle" fill="#fff" font-weight="bold">C</text></g>
+                                <g class="svg-node" data-node="D" data-deg="2"><circle cx="150" cy="150" r="15" fill="#6366f1"/><text x="150" y="155" text-anchor="middle" fill="#fff" font-weight="bold">D</text></g>
+                            </svg>
+                            <div id="degree-info" class="p-2.5 rounded-lg bg-slate-950 text-indigo-300 text-xs font-mono border border-slate-800">
+                                Click vào một đỉnh bất kỳ để xem thông tin bậc!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 9: PHẦN 2 - 2. ĐỈNH CÔ LẬP VÀ ĐỈNH TREO -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="9">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-indigo-400 text-sm font-semibold uppercase tracking-wider">Phần 2: Bậc Của Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">2. Đỉnh Cô Lập & Đỉnh Treo</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 text-xs font-bold">deg = 0</span>
+                                    <h3 class="text-lg font-bold text-slate-200">Đỉnh cô lập (Isolated Vertex)</h3>
+                                </div>
+                                <p class="text-slate-300 text-sm">
+                                    Là đỉnh có <strong>bậc bằng 0</strong> ($\deg(v) = 0$). Đỉnh này không nối với bất kỳ đỉnh nào khác trong đồ thị.
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-bold">deg = 1</span>
+                                    <h3 class="text-lg font-bold text-slate-200">Đỉnh treo (Pendant / Leaf Vertex)</h3>
+                                </div>
+                                <p class="text-slate-300 text-sm">
+                                    Là đỉnh có <strong>bậc bằng 1</strong> ($\deg(v) = 1$). Cạnh nối tới đỉnh treo gọi là cạnh treo.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SVG Diagram Isolated and Pendant -->
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Minh họa Đỉnh Cô lập & Đỉnh Treo</h4>
+                            <svg class="w-full h-52 mx-auto" viewBox="0 0 300 180">
+                                <!-- Edge for Pendant Node -->
+                                <line x1="60" y1="90" x2="160" y2="90" stroke="#64748b" stroke-width="2"/>
+                                <line x1="160" y1="90" x2="160" y2="40" stroke="#64748b" stroke-width="2"/>
+                                <line x1="160" y1="90" x2="160" y2="140" stroke="#64748b" stroke-width="2"/>
+
+                                <!-- Node A: Pendant -->
+                                <g class="svg-node" data-node="A"><circle cx="60" cy="90" r="14" fill="#f59e0b"/><text x="60" y="94" text-anchor="middle" fill="#fff" font-weight="bold">A</text></g>
+                                <!-- Main Connected Nodes -->
+                                <g class="svg-node" data-node="B"><circle cx="160" cy="90" r="14" fill="#3b82f6"/><text x="160" y="94" text-anchor="middle" fill="#fff" font-weight="bold">B</text></g>
+                                
+                                <!-- Node F: Isolated -->
+                                <g class="svg-node" data-node="F"><circle cx="250" cy="90" r="14" fill="#64748b"/><text x="250" y="94" text-anchor="middle" fill="#fff" font-weight="bold">F</text></g>
+                            </svg>
+                            <div class="flex justify-center space-x-4 text-xs">
+                                <span class="text-amber-400">● Đỉnh A: Đỉnh treo ($\deg = 1$)</span>
+                                <span class="text-slate-400">● Đỉnh F: Đỉnh cô lập ($\deg = 0$)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 10: PHẦN 2 - 3. ĐỊNH LÝ BẮT TAY -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="10">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-indigo-400 text-sm font-semibold uppercase tracking-wider">Phần 2: Bậc Của Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">3. Định Lý Bắt Tay (Handshaking Lemma)</h2>
+                    </div>
+
+                    <!-- Main Theorem Box -->
+                    <div class="bg-gradient-to-r from-indigo-950/80 to-purple-950/80 p-6 md:p-8 rounded-2xl border border-indigo-500/40 space-y-4 shadow-2xl text-center">
+                        <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider">
+                            Định lý trọng tâm
+                        </span>
+                        <h3 class="text-xl md:text-2xl font-extrabold text-indigo-200">
+                            Định lý Bắt Tay
+                        </h3>
+                        <p class="text-slate-200 text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
+                            Trong bất kỳ đồ thị vô hướng $G = (V, E)$, tổng bậc của tất cả các đỉnh luôn bằng <strong>hai lần số cạnh</strong> của đồ thị.
+                        </p>
+                        <div class="py-3 px-6 bg-slate-900/90 rounded-xl inline-block border border-indigo-500/30 shadow-inner">
+                            <span class="text-2xl md:text-3xl font-mono text-sky-400 font-bold">
+                                $$\sum_{v \in V} \deg(v) = 2|E|$$
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-2">
+                            <h4 class="font-bold text-amber-400 text-sm">🤝 Giải thích ý nghĩa tên gọi</h4>
+                            <p class="text-slate-300 text-sm leading-relaxed">
+                                Trong một buổi tiệc, mỗi cái bắt tay diễn ra giữa 2 người (tương ứng 1 cạnh nối 2 đỉnh). Mỗi lượt bắt tay đóng góp đúng 2 vào tổng số lượt bắt tay của cả 2 người hợp lại!
+                            </p>
+                        </div>
+
+                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-2">
+                            <h4 class="font-bold text-emerald-400 text-sm">💡 Ý nghĩa chứng minh toán học</h4>
+                            <p class="text-slate-300 text-sm leading-relaxed">
+                                Vì mỗi cạnh nối đúng 2 đầu đỉnh (hoặc khuyên tính 2 cho 1 đỉnh), nên khi cộng tổng bậc tất cả các đỉnh, mỗi cạnh được đếm chính xác 2 lần.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 11: PHẦN 2 - 4. HỆ QUẢ ĐỊNH LÝ BẮT TAY & VÍ DỤ -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="11">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-indigo-400 text-sm font-semibold uppercase tracking-wider">Phần 2: Bậc Của Đồ Thị</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">4. Hệ Quả Định Lý Bắt Tay</h2>
+                    </div>
+
+                    <div class="bg-emerald-950/40 border border-emerald-500/40 p-6 rounded-2xl space-y-3">
+                        <span class="px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase">Hệ quả</span>
+                        <p class="text-slate-100 text-base md:text-lg font-medium leading-relaxed">
+                            Trong mọi đồ thị, <strong>số lượng các đỉnh có bậc lẻ luôn là một số chẵn</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Example SGK 3 -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sky-400 text-base">📘 Ví dụ 3 (SGK Trang 44)</h3>
+                            <button class="toggle-btn px-3 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-semibold transition" data-target="sol-3">
+                                Xem lời giải
+                            </button>
+                        </div>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Có tồn tại một đơn đồ thị gồm 7 đỉnh với bậc của các đỉnh lần lượt là $3, 3, 3, 4, 4, 5, 5$ hay không? Vì sao?
+                        </p>
+
+                        <div id="sol-3" class="hidden p-5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-300 space-y-3">
+                            <span class="text-emerald-400 font-bold block">Lời giải chi tiết:</span>
+                            <p>
+                                • Các đỉnh có bậc lẻ là các đỉnh có bậc bằng $3, 3, 3, 5, 5$.<br>
+                                • Số lượng đỉnh có bậc lẻ trong danh sách trên là $5$ đỉnh.<br>
+                                • Vì $5$ là một <strong>số lẻ</strong>, điều này trái với Hệ quả của Định lý bắt tay (số đỉnh bậc lẻ phải luôn là một số chẵn).
+                            </p>
+                            <p class="text-amber-300 font-semibold">
+                                $\implies$ Kết luận: Không tồn tại đồ thị thỏa mãn yêu cầu đề bài.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 12: VÍ DỤ SGK TỔNG HỢP & BÀI TẬP BẬC -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="12">
+                <div class="slide-content max-w-5xl mx-auto space-y-6">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-indigo-400 text-sm font-semibold uppercase tracking-wider">Luyện Tập & Vận Dụng</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-100 mt-1">5. Bài Tập Áp Dụng Thực Tế (SGK)</h2>
+                    </div>
+
+                    <!-- Ex 4 SGK -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sky-400 text-base">📝 Bài tập 1: Tính số cạnh đồ thị</h3>
+                            <button class="toggle-btn px-3 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-semibold transition" data-target="sol-ex1">
+                                Xem lời giải
+                            </button>
+                        </div>
+                        <p class="text-slate-300 text-sm">
+                            Một đồ thị có $10$ đỉnh, trong đó mỗi đỉnh đều có bậc bằng $4$. Hỏi đồ thị đó có bao nhiêu cạnh?
+                        </p>
+
+                        <div id="sol-ex1" class="hidden p-4 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-300 space-y-2">
+                            <p>• Tổng bậc của tất cả $10$ đỉnh là: $\sum \deg(v) = 10 \times 4 = 40$.</p>
+                            <p>• Theo Định lý bắt tay: $2 |E| = 40 \implies |E| = 20$.</p>
+                            <p class="text-emerald-400 font-bold">Đáp số: Đồ thị có 20 cạnh.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ex 2 SGK -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sky-400 text-base">📝 Bài tập 2: Bài toán thực tế bắt tay</h3>
+                            <button class="toggle-btn px-3 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-semibold transition" data-target="sol-ex2">
+                                Xem lời giải
+                            </button>
+                        </div>
+                        <p class="text-slate-300 text-sm">
+                            Trong một nhóm gồm 6 học sinh, liệu có thể xảy ra trường hợp mỗi học sinh đều quen đúng 3 học sinh khác trong nhóm hay không?
+                        </p>
+
+                        <div id="sol-ex2" class="hidden p-4 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-300 space-y-2">
+                            <p>• Mô hình hóa bài toán bằng đồ thị với 6 đỉnh, mỗi đỉnh có bậc là 3.</p>
+                            <p>• Tổng bậc: $6 \times 3 = 18$ (số chẵn).</p>
+                            <p>• Số đỉnh bậc lẻ là 6 (số chẵn $\implies$ Thỏa mãn hệ quả định lý bắt tay).</p>
+                            <p>• Số cạnh của đồ thị: $|E| = 18 / 2 = 9$ cạnh.</p>
+                            <p class="text-emerald-400 font-bold">Có thể xảy ra trường hợp trên (hoàn toàn tồn tại đồ thị này).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 13: CẢM ƠN & TỔNG KẾT -->
+            <section class="slide absolute inset-0 overflow-y-auto p-6 md:p-10 pb-32 hidden" data-slide="13">
+                <div class="slide-content max-w-4xl mx-auto text-center space-y-8 py-10">
+                    <div class="space-y-3">
+                        <span class="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider">
+                            Tổng Kết Bài Học
+                        </span>
+                        <h2 class="text-3xl md:text-5xl font-extrabold text-slate-100">
+                            CẢM ƠN THẦY CÔ VÀ CÁC BẠN ĐÃ LẮNG NGHE!
+                        </h2>
+                        <p class="text-slate-400 text-base md:text-lg">
+                            Bài 8: Một vài khái niệm cơ bản của Lý thuyết đồ thị • Toán 11 KNTT
+                        </p>
+                    </div>
+
+                    <!-- Mindmap Summary Box -->
+                    <div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 text-left space-y-4 max-w-2xl mx-auto shadow-2xl">
+                        <h3 class="font-bold text-sky-400 text-center text-lg border-b border-slate-800 pb-2">🧠 Sơ Đồ Tóm Tắt Kiến Thức Trọng Tâm</h3>
+                        <div class="grid grid-cols-2 gap-4 text-xs md:text-sm">
+                            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <span class="font-bold text-indigo-400 block mb-1">1. Loại Đồ Thị</span>
+                                Đơn đồ thị, Đa đồ thị, Giả đồ thị, Đồ thị có hướng.
+                            </div>
+                            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <span class="font-bold text-indigo-400 block mb-1">2. Đặc Điểm Đỉnh</span>
+                                Đỉnh cô lập ($\deg = 0$), Đỉnh treo ($\deg = 1$).
+                            </div>
+                            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 col-span-2 text-center">
+                                <span class="font-bold text-emerald-400 block mb-1">3. Định Lý Bắt Tay</span>
+                                $$\sum_{v \in V} \deg(v) = 2|E|$$
+                                <span class="text-slate-400 text-xs">Số đỉnh có bậc lẻ luôn là một số chẵn.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-center space-x-4">
+                        <button id="btn-restart" class="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition">
+                            🔄 Xem lại từ đầu (Slide 1)
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation Controls Footer -->
+        <footer class="h-16 border-t border-slate-800 bg-slate-900/90 backdrop-blur px-4 md:px-8 flex items-center justify-between z-30 shrink-0">
+            <!-- Prev Button -->
+            <button id="btn-prev" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center space-x-2 text-xs md:text-sm font-semibold border border-slate-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                <span>Trước</span>
+            </button>
+
+            <!-- Slide Counter Display & Quick Selector -->
+            <div class="flex items-center space-x-2">
+                <span class="text-xs md:text-sm font-mono text-slate-400">Slide</span>
+                <select id="slide-select" class="bg-slate-950 border border-slate-700 text-sky-400 font-bold rounded-lg px-2.5 py-1 text-xs md:text-sm focus:outline-none focus:border-sky-500">
+                    <!-- Dynamic Options Populated by JS -->
+                </select>
+                <span class="text-xs md:text-sm font-mono text-slate-400">/ 13</span>
+            </div>
+
+            <!-- Next Button -->
+            <button id="btn-next" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center space-x-2 text-xs md:text-sm font-semibold shadow-lg shadow-sky-600/20">
+                <span>Tiếp</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Overview Grid Modal (13 Slides Picker) -->
+    <div id="overview-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex-col p-6 overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 max-w-6xl mx-auto w-full">
+            <h3 class="text-xl font-bold text-slate-100">Danh Sách Slide Thuyết Trình (13 Slide)</h3>
+            <button id="btn-close-overview" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">
+                ✕
+            </button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 max-w-6xl mx-auto w-full">
+            <!-- Populated via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Pure Vanilla JavaScript Implementation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const TOTAL_SLIDES = 13;
+            let currentSlide = 1;
+            let laserActive = false;
+
+            // Titles array for overview modal
+            const slideTitles = [
+                "Slide 1: Giới thiệu & Mục tiêu Bài 8",
+                "Slide 2: 1. Khái niệm Đồ thị",
+                "Slide 3: 2. Đơn Đồ Thị",
+                "Slide 4: 3. Đa Đồ Thị",
+                "Slide 5: 4. Giả Đồ Thị",
+                "Slide 6: 5. Đồ Thị Có Hướng",
+                "Slide 7: 6. Tổng kết & Ví dụ SGK 1",
+                "Slide 8: 1. Bậc của Đỉnh",
+                "Slide 9: 2. Đỉnh Cô lập & Đỉnh Treo",
+                "Slide 10: 3. Định Lý Bắt Tay",
+                "Slide 11: 4. Hệ Quả & Ví dụ SGK 3",
+                "Slide 12: 5. Bài Tập Luyện Tập SGK",
+                "Slide 13: Tổng Kết & Cảm Ơn"
+            ];
+
+            // DOM Elements
+            const slides = document.querySelectorAll('.slide');
+            const progressBar = document.getElementById('progress-bar');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const slideSelect = document.getElementById('slide-select');
+            const btnLaser = document.getElementById('btn-laser');
+            const laserPointer = document.getElementById('laser-pointer');
+            const btnOverview = document.getElementById('btn-overview');
+            const overviewModal = document.getElementById('overview-modal');
+            const btnCloseOverview = document.getElementById('btn-close-overview');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+            const btnRestart = document.getElementById('btn-restart');
+
+            // Populate Slide Select Dropdown & Overview Modal
+            const overviewGrid = overviewModal.querySelector('.grid');
+            for (let i = 1; i <= TOTAL_SLIDES; i++) {
+                // Dropdown Option
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                slideSelect.appendChild(option);
+
+                // Modal Grid Card
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border text-left cursor-pointer transition hover:scale-105 ${
+                    i === currentSlide ? 'bg-sky-950 border-sky-500 text-sky-300' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                }`;
+                card.innerHTML = `
+                    <div class="text-xs font-bold text-sky-400 mb-1">SLIDE ${i}</div>
+                    <div class="text-xs font-medium line-clamp-2">${slideTitles[i - 1]}</div>
+                `;
+                card.addEventListener('click', () => {
+                    goToSlide(i);
+                    toggleOverview(false);
+                });
+                overviewGrid.appendChild(card);
+            }
+
+            // Safe KaTeX renderer trigger
+            function triggerKaTeX() {
+                if (window.renderMathInElement) {
+                    try {
+                        renderMathInElement(document.body, {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false},
+                                {left: '\\(', right: '\\)', display: false},
+                                {left: '\\[', right: '\\]', display: true}
+                            ],
+                            throwOnError: false
+                        });
+                    } catch (e) {
+                        console.warn('KaTeX render warning:', e);
+                    }
+                }
+            }
+
+            // Slide Navigation Logic
+            function goToSlide(index) {
+                if (index < 1 || index > TOTAL_SLIDES) return;
+
+                slides.forEach((slide) => {
+                    slide.classList.remove('active');
+                    slide.classList.add('hidden');
+                });
+
+                currentSlide = index;
+                const activeSlide = document.querySelector(.slide[data-slide="${currentSlide}"]);
+                if (activeSlide) {
+                    activeSlide.classList.remove('hidden');
+                    // Force reflow for animation reset
+                    void activeSlide.offsetWidth;
+                    activeSlide.classList.add('active');
+                    // Reset scroll position on slide transition
+                    activeSlide.scrollTop = 0;
+                }
+
+                // Update Progress bar & UI controls
+                progressBar.style.width = ${((currentSlide - 1) / (TOTAL_SLIDES - 1)) * 100}%;
+                btnPrev.disabled = currentSlide === 1;
+                btnNext.disabled = currentSlide === TOTAL_SLIDES;
+                slideSelect.value = currentSlide;
+
+                // Re-render KaTeX if needed
+                triggerKaTeX();
+            }
+
+            // Event Listeners for Prev / Next / Select
+            btnPrev.addEventListener('click', () => goToSlide(currentSlide - 1));
+            btnNext.addEventListener('click', () => goToSlide(currentSlide + 1));
+            slideSelect.addEventListener('change', (e) => goToSlide(parseInt(e.target.value)));
+
+            if (btnRestart) {
+                btnRestart.addEventListener('click', () => goToSlide(1));
+            }
+
+            // Keyboard Navigation Shortcut Handling
+            document.addEventListener('keydown', (e) => {
+                // Ignore keypresses if typing in input fields
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+                switch (e.key) {
+                    case 'ArrowRight':
+                    case 'Space':
+                    case 'PageDown':
+                        e.preventDefault();
+                        goToSlide(currentSlide + 1);
+                        break;
+                    case 'ArrowLeft':
+                    case 'PageUp':
+                        e.preventDefault();
+                        goToSlide(currentSlide - 1);
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        goToSlide(1);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        goToSlide(TOTAL_SLIDES);
+                        break;
+                    case 'l':
+                    case 'L':
+                        toggleLaser();
+                        break;
+                    case 'o':
+                    case 'O':
+                        toggleOverview();
+                        break;
+                    case 'f':
+                    case 'F':
+                        toggleFullscreen();
+                        break;
+                    case 'Escape':
+                        toggleOverview(false);
+                        break;
+                }
+            });
+
+            // Laser Pointer Controller
+            function toggleLaser() {
+                laserActive = !laserActive;
+                if (laserActive) {
+                    document.body.classList.add('laser-active');
+                    laserPointer.style.display = 'block';
+                    btnLaser.classList.add('bg-red-950', 'border-red-500', 'text-red-400');
+                } else {
+                    document.body.classList.remove('laser-active');
+                    laserPointer.style.display = 'none';
+                    btnLaser.classList.remove('bg-red-950', 'border-red-500', 'text-red-400');
+                }
+            }
+
+            btnLaser.addEventListener('click', toggleLaser);
+
+            document.addEventListener('mousemove', (e) => {
+                if (laserActive) {
+                    laserPointer.style.left = ${e.clientX}px;
+                    laserPointer.style.top = ${e.clientY}px;
+                }
+            });
+
+            // Overview Modal Controller
+            function toggleOverview(show) {
+                const isHidden = overviewModal.classList.contains('hidden');
+                const shouldShow = show !== undefined ? show : isHidden;
+                if (shouldShow) {
+                    overviewModal.classList.remove('hidden');
+                    overviewModal.classList.add('flex');
+                } else {
+                    overviewModal.classList.add('hidden');
+                    overviewModal.classList.remove('flex');
+                }
+            }
+
+            btnOverview.addEventListener('click', () => toggleOverview());
+            btnCloseOverview.addEventListener('click', () => toggleOverview(false));
+
+            // Fullscreen API Helper
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch((err) => {
+                        console.warn(Fullscreen request failed: ${err.message});
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            btnFullscreen.addEventListener('click', toggleFullscreen);
+
+            // Solution Accordion Toggles (Event Delegation)
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.toggle-btn');
+                if (btn) {
+                    const targetId = btn.getAttribute('data-target');
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        const isHidden = targetEl.classList.contains('hidden');
+                        if (isHidden) {
+                            targetEl.classList.remove('hidden');
+                            btn.textContent = 'Ẩn lời giải';
+                            btn.classList.replace('bg-sky-500/20', 'bg-emerald-500/20');
+                            btn.classList.replace('text-sky-300', 'text-emerald-300');
+                        } else {
+                            targetEl.classList.add('hidden');
+                            btn.textContent = 'Xem lời giải';
+                            btn.classList.replace('bg-emerald-500/20', 'bg-sky-500/20');
+                            btn.classList.replace('text-emerald-300', 'text-sky-300');
+                        }
+                    }
+                }
+            });
+
+            // Interactive Degree SVG Node Handler
+            const svgNodes = document.querySelectorAll('.svg-node');
+            const degreeInfoBox = document.getElementById('degree-info');
+
+            svgNodes.forEach((node) => {
+                node.addEventListener('click', function () {
+                    const nodeName = this.getAttribute('data-node');
+                    const degree = this.getAttribute('data-deg');
+                    if (nodeName && degree && degreeInfoBox) {
+                        degreeInfoBox.innerHTML = Đỉnh <strong>${nodeName}</strong> có bậc: $\\deg(${nodeName}) = ${degree}$;
+                        triggerKaTeX();
+                    }
+                });
+            });
+
+            // Initial KaTeX Render Attempt on Window Load
+            window.addEventListener('load', () => {
+                setTimeout(triggerKaTeX, 300);
+            });
+
+            // Initialize App
+            goToSlide(1);
+        });
+    </script>
+</body>
+</html>
